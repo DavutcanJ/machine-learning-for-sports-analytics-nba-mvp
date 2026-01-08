@@ -67,11 +67,8 @@ def Data_prep():
     nba_data_scaled['Season'] = nba_data['Season']
     nba_data_scaled['Player'] = nba_data['Player']
 
-    
-    nba_data_scaled.to_csv("datasets/dataset_extra.csv", index=False)
-    print("Scaled datasets saved as train_scaled.csv and test_scaled.csv")
-
-    # Assign class weights based on the class distribution
+    # Save the scaled dataset
+    nba_data_scaled.to_csv("datasets/dataset_scaled.csv", index=False)
 
 
 def Data_clean(data):
@@ -84,28 +81,26 @@ def Data_clean(data):
 
     print("Data cleaning...")
 
-    # Feature importance analizi ile önemli sütunları belirle
+    # Using Feature importance find the valuable features
 
-    # Sadece sayısal ve kategorik olarak encode edilmiş sütunları al
+    # Use numerical columns
     feature_cols = data.drop(['mvp_award', 'Player', 'Season'], axis=1, errors='ignore').columns
     X = data[feature_cols]
     y = data['mvp_award']
 
-    # RandomForest ile feature importance hesapla
+    # Calculate feature importance using randomforest
     rf = RandomForestClassifier(n_estimators=1000, random_state=42)
     rf.fit(X, y)
     importances = rf.feature_importances_
 
-    # Önemli sütunları belirle (ör: importance > 0.01)
+    # Apply threshold (ör: importance > 0.01)
     important_features = [col for col, imp in zip(feature_cols, importances) if imp > 0.01]
 
     print("Önemli sütunlar:", important_features)
 
-    # Sadece önemli sütunları bırak
+    # Keep the important ones
     cols_to_keep = important_features + ['mvp_award', 'Player', 'Season']
     data = data[cols_to_keep]
-    # # Drop players with less than 10 minutes played
-    # data = data.drop(data[data["MP"] < 10].index)
 
     return data
 
@@ -126,10 +121,10 @@ def handle_outliers(data):
 def Data_handle_categorical(data):
     print("Data encoding...")
 
-    # Sadece kategorik sütunları seç
+    # Select categorical columns
     categorical_columns = data.select_dtypes(include=['object']).columns
 
-    # Kategorik sütunlar varsa, bunlara label encoding uygula
+    # Appyl encoding
     if len(categorical_columns) > 0:
         for col in categorical_columns:
             data[col] = data[col].astype('category').cat.codes
